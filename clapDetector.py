@@ -169,7 +169,7 @@ class ClapDetector():
         self.volumeThreshold = (self.volumeAverageFactor * self.volumeThreshold) + \
                             ((1 - self.volumeAverageFactor) * newValue) * 0.5
 
-    def isClap(self, thresholdBias=6000, lowcut=1600, highcut=2300):
+    def isClap(self, currentSampleTime, thresholdBias=6000, lowcut=1600, highcut=2300):
         """
         Detect the occurrence of a clap in the input audio data using a dynamic threshold.
 
@@ -198,7 +198,7 @@ class ClapDetector():
         self.updateDynamicThreshold(dynamicThreshold)
 
         # Find peaks in the filtered audio signal
-        peaks, _ = find_peaks(self, currentSampleTime, filteredAudio, height=self.volumeThreshold + thresholdBias)
+        peaks, _ = find_peaks(filteredAudio, height=self.volumeThreshold + thresholdBias)
 
         # If peaks are found and debounce time has passed
         if len(peaks) > 0 and (self.calculateTimeDifference(currentSampleTime, self.clapTimes[-1]) >= int(self.debounceTimeFactor * self.rate)):
@@ -323,7 +323,7 @@ class ClapDetector():
 
         self.currentSampleTime = self.convertToCircularTime(self.currentSampleTime + self.bufferLength) #< Convert the current sample time to a circular time scale
 
-        self.isClap(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut)
+        self.isClap(self.currentSampleTime, thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut)
         pattern = self.detectClapPattern()
 
         if pattern:              
