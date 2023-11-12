@@ -2,7 +2,6 @@ import pyaudio
 import numpy as np
 import time
 from datetime import datetime
-import requests
 from scipy.signal import butter, lfilter, find_peaks
 from scipy.io.wavfile import write as writeAudioFile
 import logging
@@ -14,7 +13,7 @@ class ClapDetector():
     def __init__(self, inputDeviceIndex=8, #< 8
                  initialVolumeThreshold=7000,
                  rate=48000,
-                 bufferLength=1024,
+                 bufferLength=2048,
                  debounceTimeFactor=0.15,
                  resetTime=0.25,                                       #< seconds to reset the clap pattern
                  clapInterval=0.08,
@@ -22,7 +21,7 @@ class ClapDetector():
                  volumeAverageFactor=0.9,                              #< Factor to control the influence of the new threshold on the average
                  logger=None,
                  logLevel = logging.INFO,
-                 audioBufferLength=3.1                                 #< legth of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
+                 audioBufferLength=3.1                                 #< length of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
                  ):
         self.inputDeviceIndex = inputDeviceIndex
         self.volumeThreshold = initialVolumeThreshold
@@ -84,7 +83,7 @@ class ClapDetector():
         except:
             self.logger.warning("audio stream failed to stop")
         self.initAudio()
-        self.logger.debug("sucsesfully restarted audio stream")
+        self.logger.debug("successfully restarted audio stream")
         return(self)
 
     def calculateTimeDifference(self, timeA, timeB) -> float:
@@ -247,7 +246,7 @@ class ClapDetector():
                 pattern.append(consecutiveClaps)     #< append the amount of claps to the pattern
                 consecutiveClaps = 1                 #< reset consecutiveClaps
         
-        if consecutiveClaps > 1:                     #< if there are more than one consecutaive clap that was recorder but not appended to the pattern
+        if consecutiveClaps > 1:                     #< if there are more than one consecutive clap that was recorder but not appended to the pattern
             pattern.append(consecutiveClaps)
         return(pattern)
 
@@ -336,50 +335,30 @@ class ClapDetector():
         self.stream.stop_stream()
         self.stream.close()
         self.p.terminate()
-        self.logger.info("audio stream stoped")
+        self.logger.info("audio stream stopped")
 
 if __name__ == '__main__':
 
-    def sendNotification(msg):
-        url = f"http://192.168.0.121:81/testing"
-        try:
-            res = requests.post(url, data=msg)
-        except:
-            res = None
-        return res
-
     pyaudio.PyAudio()
-    # clapDetection = ClapDetector()
-    
-    
-    clapDetectorVars = ((6000, 1500, 2000), (6000, 2000, 2500), (6000, 2500, 3000))
-    clapDetectors = [ClapDetector(logLevel=logging.DEBUG) for _ in range(len(clapDetectorVars))]
-    clapDetectors[0].initAudio()
-    print(clapDetectors[0].printDeviceInfo())
-    
-    # Run the clap detection in a loop
+    thresholdBias = 6000
+    lowcut=200
+    highcut=2500
+    clapDetector = ClapDetector(logLevel=logging.DEBUG)
+    clapDetector.initAudio()
+    clapDetector.printDeviceInfo()
+
     try:
         while True:
-            audioData = clapDetectors[0].getAudio()
-            
-            isClap = False
-            for i in range(len(clapDetectorVars)):
-                result = clapDetectors[i-1].run(thresholdBias=clapDetectorVars[i-1][0], lowcut=clapDetectorVars[i-1][1], highcut=clapDetectorVars[i-1][2], audioData=audioData)
-                resultLength = len(result)
-                # if resultLength >= 1:
-                #     print(f"result is {result} for bias {clapDetectorVars[i-1][0]}, lowcut {clapDetectorVars[i-1][1]}, and highcut {clapDetectorVars[i-1][2]}")
-                if resultLength == 2:
-                    message = f"Double clap detected! bias {clapDetectorVars[i-1][0]}, lowcut {clapDetectorVars[i-1][1]}, and highcut {clapDetectorVars[i-1][2]}"
-                    isClap = True
-                    # print(message)
-                    sendNotification(message)
-                    # Add any additional actions you want to perform when a double clap is detected
-            if isClap:
-                clapDetectors[0].saveAudio()
+            audioData = clapDetector.getAudio()
+
+            result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
+            resultLength = len(result)
+            if resultLength == 2:
+                message = f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}"
+                clapDetector.saveAudio(folder="./")
 
     except KeyboardInterrupt:
         print("Exited gracefully")
     except Exception as e:
         print(f"error: {e}")
-        for clapDetector in clapDetectors:
-            clapDetector.stop()
+        clapDetector.stop()
