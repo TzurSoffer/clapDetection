@@ -76,7 +76,7 @@ This project implements a clap detection system using an a mic or raw audio data
          result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
          resultLength = len(result)
          if resultLength == 2:
-               message = f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}"
+               print(f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
                clapDetector.saveAudio(folder="./")
 
    except KeyboardInterrupt:
