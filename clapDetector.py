@@ -331,8 +331,8 @@ class ClapDetector():
         if type(audio) == int:
             audio = np.array(self.audioBuffer, dtype=np.int16).reshape(-1,)
         if fileName == None:
-            fileName = f"{datetime.now().strftime('%Y-%m-%d:%H:%M')}.wav"
-        
+            fileName = f"{datetime.now().strftime('%Y-%m-%d_%H_%M')}.wav"
+
         writeAudioFile(os.path.join(folder, fileName), self.rate, audio)
 
     def run(self, thresholdBias=6000, lowcut=100, highcut=4000, audioData=-1) -> list:
@@ -375,9 +375,9 @@ if __name__ == '__main__':
 
     pyaudio.PyAudio()
     thresholdBias = 6000
-    lowcut=200
-    highcut=3500
-    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="Microphone (Yeti Stereo Microph")
+    lowcut=200               #< increase this to make claps detection more strict
+    highcut=3200             #< decrease this to make claps detection more strict
+    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
     clapDetector.printDeviceInfo()
     print("""
           -----------------------------
