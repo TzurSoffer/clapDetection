@@ -10,10 +10,10 @@ from collections import deque
 class ClapDetector():
     """TBR
     """
-    def __init__(self, inputDeviceIndex=8, #< 8
+    def __init__(self, inputDeviceIndex="USB Audio Device",            #< ID or name/name_section of audio Device
                  initialVolumeThreshold=7000,
-                 rate=48000,
-                 bufferLength=2048,
+                 rate=None,                                            #< Sample rate of microphone (leave None to get dynamicly)
+                 bufferLength=2048,                                    #< Length of audio clip section(buffer)
                  debounceTimeFactor=0.15,
                  resetTime=0.25,                                       #< seconds to reset the clap pattern
                  clapInterval=0.08,
@@ -23,6 +23,8 @@ class ClapDetector():
                  logLevel = logging.INFO,
                  audioBufferLength=3.1                                 #< length of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
                  ):
+        if type(inputDeviceIndex) == str:
+            inputDeviceIndex = self.findID(lookfor=inputDeviceIndex)
         self.inputDeviceIndex = inputDeviceIndex
         self.volumeThreshold = initialVolumeThreshold
         self.rate = rate
@@ -32,8 +34,8 @@ class ClapDetector():
         self.clapIntervalSamples = int(clapInterval * rate)
         self.samplesPerTimePeriod = secondsPerTimePeriod * rate
         self.volumeAverageFactor = volumeAverageFactor
-        
-        print((rate*audioBufferLength)/bufferLength)
+        self.audioData = np.array([], dtype=np.int16)
+
         self.audioBuffer = deque(maxlen=int((rate*audioBufferLength)/bufferLength))
 
         # Clap detection variables
@@ -48,6 +50,21 @@ class ClapDetector():
     def _resetClapTimes(self):
         self.clapTimes = [0]  #< Reset clapTimes
     
+    def findID(self, lookfor="USB Audio Device"):
+        p = pyaudio.PyAudio()
+        info = p.get_host_api_info_by_index(0)
+        numDevices = info.get('deviceCount')
+        
+        print("finding device")
+        for i in range(0, numDevices):
+            deviceInfo = str(p.get_device_info_by_host_api_device_index(0, i)["name"])
+            if lookfor in deviceInfo:
+                print(f"found {lookfor} in index {i}")
+                return(i)
+
+        print(f"{lookfor} was not found in available devices.")
+        return(-1)
+
     def initLogger(self, logLevel=logging.INFO) -> None:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logLevel)
@@ -68,13 +85,22 @@ class ClapDetector():
 
     def initAudio(self):
         self.p = pyaudio.PyAudio()
-        self.stream = self.p.open(format=pyaudio.paInt16,
-                                  channels=1,
-                                  rate=self.rate,
+        input_device_info = self.p.get_device_info_by_index(self.inputDeviceIndex)
+        channels = input_device_info.get('maxInputChannels', 1)
+        rate = self.rate
+        if rate == None:
+            rate = int(input_device_info['defaultSampleRate'], 44100)
+        print(f"Microphone on index {self.inputDeviceIndex} has {channels} channels and operates at a rate of {rate}")
+        try:
+            self.stream = self.p.open(format=pyaudio.paInt16,
+                                  channels=channels,
+                                  rate=rate,
                                   input=True,
                                   frames_per_buffer=self.bufferLength,
                                   input_device_index=self.inputDeviceIndex)
-        self.logger.debug("audio has been initialized")
+        except:
+            raise Exception("Failed to open audio stream perhaps the audio index/name is incorrect?")
+        self.logger.info("audio has been initialized")
         return(self)
         
     def restartAudio(self):
@@ -168,7 +194,7 @@ class ClapDetector():
         self.volumeThreshold = (self.volumeAverageFactor * self.volumeThreshold) + \
                             ((1 - self.volumeAverageFactor) * newValue) * 0.5
 
-    def isClap(self, currentSampleTime, thresholdBias=6000, lowcut=1600, highcut=2300):
+    def isClap(self, currentSampleTime, thresholdBias=6000, lowcut=100, highcut=4000):
         """
         Detect the occurrence of a clap in the input audio data using a dynamic threshold.
 
@@ -260,12 +286,13 @@ class ClapDetector():
         Returns:
         - None
         """
-        info = self.p.get_host_api_info_by_index(0)
+        p = pyaudio.PyAudio()
+        info = p.get_host_api_info_by_index(0)
         numDevices = info.get('deviceCount')
 
         print("Available audio devices:")
         for i in range(0, numDevices):
-            deviceInfo = self.p.get_device_info_by_host_api_device_index(0, i)
+            deviceInfo = p.get_device_info_by_host_api_device_index(0, i)
             print(f"Device {i}: {deviceInfo['name']}")
     
     def getAudio(self, audio=-1) -> np.ndarray:
@@ -279,19 +306,21 @@ class ClapDetector():
         Returns:
         - numpy.ndarray: NumPy array containing the retrieved audio data.
         """
-        while True:
-            try:
+        try:
+            if type(audio) == int:
+                self.audioData = np.frombuffer(self.stream.read(self.bufferLength), dtype=np.int16) #< Convert the raw audio data to a NumPy array of 16-bit integers
+            else:                                                                                   #< using else to avoid overwrite of self.audioData with -1 if failed to capture audio
                 self.audioData = audio
-                if type(audio) == int:
-                    self.audioData = np.frombuffer(self.stream.read(self.bufferLength), dtype=np.int16) #< Convert the raw audio data to a NumPy array of 16-bit integers
-                
-                self.audioBuffer.append(self.audioData)
-                return(self.audioData)
-            except:
-                time.sleep(1)
-                print("Recording error, resetting stream and trying again")
-                self.restartAudio()
-                continue
+            self.audioBuffer.append(self.audioData)
+
+        except Exception as e:
+            time.sleep(.5)
+            print(e)
+            print("Recording error, resetting stream and trying again")
+            self.restartAudio()
+        
+        finally:
+            return(self.audioData)
     
     def saveAudio(self, folder="./claps", fileName=None, audio=-1):
         if type(audio) == int:
@@ -301,7 +330,7 @@ class ClapDetector():
         
         writeAudioFile(f"{folder}/{fileName}", self.rate, audio)
 
-    def run(self, thresholdBias=6000, lowcut=1600, highcut=2300, audioData=-1) -> list:
+    def run(self, thresholdBias=6000, lowcut=100, highcut=4000, audioData=-1) -> list:
         """
         Run the clap detection process and return the result.
 
@@ -342,10 +371,15 @@ if __name__ == '__main__':
     pyaudio.PyAudio()
     thresholdBias = 6000
     lowcut=200
-    highcut=2500
-    clapDetector = ClapDetector(logLevel=logging.DEBUG)
-    clapDetector.initAudio()
+    highcut=3500
+    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
     clapDetector.printDeviceInfo()
+    print("""
+          -----------------------------
+          These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
+          -----------------------------
+          """)
+    clapDetector.initAudio()
 
     try:
         while True:
