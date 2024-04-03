@@ -1,6 +1,7 @@
 import pyaudio
 import numpy as np
 import time
+import os
 from datetime import datetime
 from scipy.signal import butter, lfilter, find_peaks
 from scipy.io.wavfile import write as writeAudioFile
@@ -12,7 +13,7 @@ class ClapDetector():
     """
     def __init__(self, inputDeviceIndex="USB Audio Device",            #< ID or name/name_section of audio Device
                  initialVolumeThreshold=7000,
-                 rate=None,                                            #< Sample rate of microphone (leave None to get dynamicly)
+                 rate=None,                                            #< Sample rate of microphone (leave None to get dynamically)
                  bufferLength=2048,                                    #< Length of audio clip section(buffer)
                  debounceTimeFactor=0.15,
                  resetTime=0.25,                                       #< seconds to reset the clap pattern
@@ -30,16 +31,14 @@ class ClapDetector():
         self.rate = rate
         self.bufferLength = bufferLength
         self.debounceTimeFactor = debounceTimeFactor
-        self.resetTimeSamples = int(resetTime * rate)
-        self.clapIntervalSamples = int(clapInterval * rate)
-        self.samplesPerTimePeriod = secondsPerTimePeriod * rate
+        self.resetTime = resetTime
+        self.clapInterval = clapInterval
+        self.secondsPerTimePeriod = secondsPerTimePeriod
+        self.audioBufferLength = audioBufferLength
         self.volumeAverageFactor = volumeAverageFactor
         self.audioData = np.array([], dtype=np.int16)
 
-        self.audioBuffer = deque(maxlen=int((rate*audioBufferLength)/bufferLength))
-
         # Clap detection variables
-        self.currentSampleTime = 0 + int(debounceTimeFactor * rate)
         self._resetClapTimes()                                        #< initialize the clapTimes with a zero for the debounce to have an init value to use for calculations
         
         #initialize the logger if a logger was not provided
@@ -87,14 +86,20 @@ class ClapDetector():
         self.p = pyaudio.PyAudio()
         input_device_info = self.p.get_device_info_by_index(self.inputDeviceIndex)
         channels = input_device_info.get('maxInputChannels', 1)
-        rate = self.rate
-        if rate == None:
-            rate = int(input_device_info['defaultSampleRate'], 44100)
-        print(f"Microphone on index {self.inputDeviceIndex} has {channels} channels and operates at a rate of {rate}")
+        if self.rate == None:
+            self.rate = int(input_device_info.get('defaultSampleRate', 44100))
+
+        self.resetTimeSamples = int(self.resetTime * self.rate)
+        self.clapIntervalSamples = int(self.clapInterval * self.rate)
+        self.samplesPerTimePeriod = self.secondsPerTimePeriod * self.rate
+        self.audioBuffer = deque(maxlen=int((self.rate*self.audioBufferLength)/self.bufferLength))
+        self.currentSampleTime = 0 + int(self.debounceTimeFactor * self.rate)
+
+        print(f"Microphone on index {self.inputDeviceIndex} has {channels} channels and operates at a rate of {self.rate}")
         try:
             self.stream = self.p.open(format=pyaudio.paInt16,
                                   channels=channels,
-                                  rate=rate,
+                                  rate=self.rate,
                                   input=True,
                                   frames_per_buffer=self.bufferLength,
                                   input_device_index=self.inputDeviceIndex)
@@ -328,7 +333,7 @@ class ClapDetector():
         if fileName == None:
             fileName = f"{datetime.now().strftime('%Y-%m-%d:%H:%M')}.wav"
         
-        writeAudioFile(f"{folder}/{fileName}", self.rate, audio)
+        writeAudioFile(os.path.join(folder, fileName), self.rate, audio)
 
     def run(self, thresholdBias=6000, lowcut=100, highcut=4000, audioData=-1) -> list:
         """
@@ -372,7 +377,7 @@ if __name__ == '__main__':
     thresholdBias = 6000
     lowcut=200
     highcut=3500
-    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
+    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="Microphone (Yeti Stereo Microph")
     clapDetector.printDeviceInfo()
     print("""
           -----------------------------
