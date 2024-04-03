@@ -54,34 +54,36 @@ This project implements a clap detection system using an a mic or raw audio data
 
 1. Create a script that uses this library 
    ```python
-    pyaudio.PyAudio()
-    thresholdBias = 6000
-    lowcut=200               #< increase this to make claps detection more strict
-    highcut=3200             #< decrease this to make claps detection more strict
-    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
-    clapDetector.printDeviceInfo()
-    print("""
-          -----------------------------
-          These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
-          -----------------------------
-          """)
-    clapDetector.initAudio()
+   import logging
+   from clapDetector import ClapDetector
 
-    try:
-        while True:
-            audioData = clapDetector.getAudio()
+   thresholdBias = 6000
+   lowcut=200               #< increase this to make claps detection more strict
+   highcut=3200             #< decrease this to make claps detection more strict
+   clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
+   clapDetector.printDeviceInfo()
+   print("""
+         -----------------------------
+         These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
+         -----------------------------
+         """)
+   clapDetector.initAudio()
 
-            result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
-            resultLength = len(result)
-            if resultLength == 2:
-                message = f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}"
-                clapDetector.saveAudio(folder="./")
+   try:
+      while True:
+         audioData = clapDetector.getAudio()
 
-    except KeyboardInterrupt:
-        print("Exited gracefully")
-    except Exception as e:
-        print(f"error: {e}")
-        clapDetector.stop()
+         result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
+         resultLength = len(result)
+         if resultLength == 2:
+               message = f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}"
+               clapDetector.saveAudio(folder="./")
+
+   except KeyboardInterrupt:
+      print("Exited gracefully")
+   except Exception as e:
+      print(f"error: {e}")
+      clapDetector.stop()
    ```
 
 2. The system will continuously monitor audio input and detect claps.

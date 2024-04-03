@@ -2,6 +2,7 @@ __pycache__
 myvenv
 .history
 src/claps/*
-src/clapDetector.egg-info
+src/clap_detector.egg-info/*
 src/clapDetection.log
 .pypirc
+uploadToPypi.bat
