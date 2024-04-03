@@ -1,3 +1,16 @@
+Metadata-Version: 2.1
+Name: clap-detector
+Version: 2.0.2
+Summary: A clap detector that can detect claps in patterns of single, double, etc.
+Home-page: https://github.com/TzurSoffer/clapDetection
+Author: Tzur Soffer
+Author-email: tzur.soffer@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
 # Clap Detection System
 
 ## Overview

@@ -1,0 +1,40 @@
+2024-04-02 19:54:09,107 - __main__ - INFO - audio has been initialized
+2024-04-02 19:54:11,634 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 19:54:13,313 - __main__ - DEBUG - Clap detected! 12 peaks found
+2024-04-02 19:54:13,543 - __main__ - DEBUG - Clap detected! 10 peaks found
+2024-04-02 19:54:13,837 - __main__ - INFO - audio stream stopped
+2024-04-02 19:55:51,415 - __main__ - INFO - audio has been initialized
+2024-04-02 19:55:53,661 - __main__ - DEBUG - Clap detected! 9 peaks found
+2024-04-02 19:55:53,901 - __main__ - DEBUG - Clap detected! 8 peaks found
+2024-04-02 19:55:54,194 - __main__ - INFO - audio stream stopped
+2024-04-02 20:00:39,637 - __main__ - INFO - audio has been initialized
+2024-04-02 20:00:41,513 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:00:41,792 - __main__ - DEBUG - Clap detected! 6 peaks found
+2024-04-02 20:00:42,086 - __main__ - INFO - audio stream stopped
+2024-04-02 20:01:41,997 - __main__ - INFO - audio has been initialized
+2024-04-02 20:01:43,461 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:01:43,872 - __main__ - DEBUG - Clap detected! 3 peaks found
+2024-04-02 20:01:45,082 - __main__ - DEBUG - Clap detected! 3 peaks found
+2024-04-02 20:01:45,312 - __main__ - DEBUG - Clap detected! 20 peaks found
+2024-04-02 20:01:45,605 - __main__ - INFO - audio stream stopped
+2024-04-02 20:02:40,518 - __main__ - INFO - audio has been initialized
+2024-04-02 20:02:41,704 - __main__ - DEBUG - Clap detected! 13 peaks found
+2024-04-02 20:02:41,884 - __main__ - DEBUG - Clap detected! 3 peaks found
+2024-04-02 20:02:54,565 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:02:54,795 - __main__ - DEBUG - Clap detected! 4 peaks found
+2024-04-02 20:03:22,294 - __main__ - DEBUG - Clap detected! 7 peaks found
+2024-04-02 20:03:26,094 - __main__ - DEBUG - Clap detected! 3 peaks found
+2024-04-02 20:03:27,674 - __main__ - DEBUG - Clap detected! 5 peaks found
+2024-04-02 20:03:49,273 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:03:51,175 - __main__ - DEBUG - Clap detected! 9 peaks found
+2024-04-02 20:03:51,914 - __main__ - DEBUG - Clap detected! 3 peaks found
+2024-04-02 20:03:54,614 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:04:01,204 - __main__ - DEBUG - Clap detected! 1 peaks found
+2024-04-02 20:04:04,594 - __main__ - DEBUG - Clap detected! 2 peaks found
+2024-04-02 20:05:15,291 - __main__ - INFO - audio has been initialized
+2024-04-02 20:05:17,445 - __main__ - DEBUG - Clap detected! 12 peaks found
+2024-04-02 20:05:17,677 - __main__ - DEBUG - Clap detected! 2 peaks found
+2024-04-02 20:05:23,206 - __main__ - DEBUG - Clap detected! 8 peaks found
+2024-04-02 20:05:26,185 - __main__ - DEBUG - Clap detected! 4 peaks found
+2024-04-02 20:05:30,125 - __main__ - DEBUG - Clap detected! 6 peaks found
+2024-04-02 20:05:36,585 - __main__ - DEBUG - Clap detected! 1 peaks found
