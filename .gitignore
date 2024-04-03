@@ -1,5 +1,6 @@
 __pycache__
 myvenv
 .history
-claps/*
-clapDetection.log
+src/claps/*
+src/clapDetection.log
+.pypirc

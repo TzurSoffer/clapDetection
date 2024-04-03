@@ -1,0 +1,8 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "numpy",
+    "scipy",
+    "pyaudio"
+]
+build-backend = "setuptools.build_meta"
