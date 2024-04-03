@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project implements a clap detection system using an a mic or raw audio data as input. It can detect calp patterns including single and double claps.
+This project implements a clap detection system using an a mic or raw audio data as input. It can detect clap patterns including single and double claps.
 
 ## Features
 
@@ -37,7 +37,7 @@ This project implements a clap detection system using an a mic or raw audio data
 
    ```bash
    git clone https://github.com/TzurSoffer/clapDetection/
-   cd clapDetection/src
+   cd clapDetection/src/clapDetector
    ```
 
 3. Run the clap detection script:

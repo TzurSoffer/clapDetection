@@ -3,6 +3,6 @@ myvenv
 .history
 src/claps/*
 src/clap_detector.egg-info/*
-src/clapDetection.log
+src/clapDetector/clapDetection.log
 .pypirc
 uploadToPypi.bat
