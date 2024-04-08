@@ -11,6 +11,20 @@ This project implements a clap detection system using an a mic or raw audio data
 - Bandpass filtering to focus on clap frequencies.
 - Audio recording and saving capabilities.
 
+## Troubleshooting
+
+### PyAudio
+   - #### Option A
+      If clap-detector fails to install due to pyaudio issues, try to install ``` portaudio19 ``` using ``` sudo apt install portaudio19-dev ```, then install clap-detector normally using ``` pip install clap-detector ```.
+   - #### Option B
+      If pyaudio still fails to install after trying option A, try to install it using ``` sudo apt install python3-pyaudio ```, then install clap-detector normally ``` pip install clap-detector```.
+
+### Input
+   - If there are issues with audio input, check the device index in the `ClapDetector` constructor.
+
+### Accuracy
+- Adjust the bandpass filter parameters for better clap detection in different environments.
+
 ## Requirements
 
 - Python3
@@ -87,12 +101,6 @@ This project implements a clap detection system using an a mic or raw audio data
    ```
 
 2. The system will continuously monitor audio input and detect claps.
-
-## Troubleshooting
-
-- If there are issues with audio input, check the device index in the `ClapDetector` constructor.
-
-- Adjust the bandpass filter parameters for better clap detection in different environments.
 
 ## License
 
