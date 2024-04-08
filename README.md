@@ -21,7 +21,7 @@ This project implements a clap detection system using an a mic or raw audio data
 ## Installation
 
 ### option A:
-1. install from the official pypi package (might be outdated):
+1. install from the official pypi package:
    ```bash
    pip install clap-detector
    ```
