@@ -9,7 +9,93 @@ import logging
 from collections import deque
 
 class ClapDetector():
-    """TBR
+    """
+    ClapDetector Class
+
+    This class provides functionality for detecting claps from an audio input stream. It initializes an audio input 
+    device, processes the audio to detect claps based on a dynamic threshold, and can identify patterns of claps. 
+    Additionally, it can log the detection events and save audio data.
+
+    Attributes:
+    -----------
+    inputDeviceIndex : int or str
+        The ID or name of the audio input device.
+    initialVolumeThreshold : int
+        The initial volume threshold for clap detection.
+    rate : int
+        The sample rate of the microphone. If None, it will be determined automatically.
+    bufferLength : int
+        The length of the audio clip section (buffer) in samples.
+    debounceTimeFactor : float
+        The factor used to calculate debounce time for clap detection.
+    resetTime : float
+        The time (in seconds) to reset the clap pattern.
+    clapInterval : float
+        The maximum time interval (in seconds) between claps to be considered part of the same clap.
+    secondsPerTimePeriod : int
+        The length of the circular time period for pattern detection.
+    volumeAverageFactor : float
+        The factor controlling the influence of the new threshold on the average threshold.
+    logger : logging.Logger
+        The logger object for logging events.
+    logLevel : int
+        The logging level.
+    audioBufferLength : float
+        The length of audio to save to file (for saving audio to file only, not used in clap detection).
+
+    Methods:
+    --------
+    findID(self, lookfor="USB Audio Device") -> int:
+        Finds the ID of the audio input device based on its name.
+
+    initLogger(self, logLevel=logging.INFO) -> None:
+        Initializes the logger if not provided.
+
+    initAudio(self) -> None:
+        Initializes the audio input stream.
+
+    restartAudio(self) -> None:
+        Restarts the audio input stream.
+
+    calculateTimeDifference(self, timeA, timeB) -> float:
+        Calculates the time difference between two timestamps, considering a circular time scale.
+
+    convertToCircularTime(self, timestamp) -> float:
+        Converts a timestamp to a circular time scale.
+
+    bandpassFilter(self, data, lowcut, highcut, fs, order=5) -> np.ndarray:
+        Applies a bandpass filter to the input data.
+
+    updateDynamicThreshold(self, newValue) -> None:
+        Updates the volume threshold using a running average with a weighted change.
+
+    isClap(self, currentSampleTime, thresholdBias=6000, lowcut=100, highcut=4000) -> bool:
+        Detects the occurrence of a clap in the input audio data using a dynamic threshold.
+
+    detectClapPattern(self) -> list:
+        Detects and extracts clap patterns based on recorded clap times.
+
+    extractPattern(self) -> list:
+        Extracts clap pattern based on the time intervals between recorded clap times.
+
+    printDeviceInfo(self) -> None:
+        Prints information about available audio devices.
+
+    getAudio(self, audio=-1) -> np.ndarray:
+        Continuously retrieves audio data from the input stream.
+
+    saveAudio(self, folder="./claps", fileName=None, audio=-1) -> None:
+        Saves the audio data to a file.
+
+    run(self, thresholdBias=6000, lowcut=100, highcut=4000, audioData=-1) -> list:
+        Runs the clap detection process and returns the result.
+
+    stop(self) -> None:
+        Gracefully stops the audio stream.
+
+    _resetClapTimes(self) -> None:
+        Resets the clap times.
+
     """
     def __init__(self, inputDeviceIndex="USB Audio Device",            #< ID or name/name_section of audio Device
                  initialVolumeThreshold=7000,
@@ -48,7 +134,7 @@ class ClapDetector():
     
     def _resetClapTimes(self):
         self.clapTimes = [0]  #< Reset clapTimes
-    
+
     def findID(self, lookfor="USB Audio Device"):
         p = pyaudio.PyAudio()
         info = p.get_host_api_info_by_index(0)
@@ -377,7 +463,7 @@ if __name__ == '__main__':
     thresholdBias = 6000
     lowcut=200               #< increase this to make claps detection more strict
     highcut=3200             #< decrease this to make claps detection more strict
-    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
+    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="Microphone (Yeti Stereo Microph")
     clapDetector.printDeviceInfo()
     print("""
           -----------------------------
@@ -393,7 +479,7 @@ if __name__ == '__main__':
             result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
             resultLength = len(result)
             if resultLength == 2:
-                message = f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}"
+                print(f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
                 clapDetector.saveAudio(folder="./")
 
     except KeyboardInterrupt:

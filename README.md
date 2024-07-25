@@ -10,7 +10,7 @@ This project implements a clap detection system using an a mic or raw audio data
 - Dynamic threshold adjustment for robust clap detection.
 - Bandpass filtering to focus on clap frequencies.
 - Audio recording and saving capabilities.
-
+![Live Visualization Failed to load](https://github.com/TzurSoffer/clapDetection/tree/master/examples/videos/liveVisualization.gif)
 ## Troubleshooting
 
 ### PyAudio
@@ -66,9 +66,14 @@ This project implements a clap detection system using an a mic or raw audio data
 
 ## Usage
 
+### option A:
+1. clone the repository, if you have not already using ```git clone https://github.com/TzurSoffer/clapDetection/```
+
+2. go into the examples folder and choose one of the scripts you would like to run.
+
+### option B:
 1. Create a script that uses this library 
    ```python
-   import logging
    from clapDetector import ClapDetector
 
    thresholdBias = 6000
