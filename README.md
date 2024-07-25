@@ -10,7 +10,7 @@ This project implements a clap detection system using an a mic or raw audio data
 - Dynamic threshold adjustment for robust clap detection.
 - Bandpass filtering to focus on clap frequencies.
 - Audio recording and saving capabilities.
-![Live Visualization Failed to load](https://github.com/RandomTheFirst/clapDetection/tree/master/examples/videos/liveVisualization.gif)
+![Live Visualization Failed to load](examples/videos/liveVisualization.gif)
 ## Troubleshooting
 
 ### PyAudio
