@@ -1,5 +1,5 @@
 __pycache__
-myvenv
+.venv
 .history
 src/claps/*
 src/clap_detector.egg-info/*

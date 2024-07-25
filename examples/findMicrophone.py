@@ -1,4 +1,6 @@
-from clapDetector import ClapDetector
+import sys
+sys.path.append("..")
+from src.clapDetector import ClapDetector
 
 clapDetector = ClapDetector(logLevel=10, inputDeviceIndex="")
 clapDetector.printDeviceInfo()

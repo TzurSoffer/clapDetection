@@ -1,4 +1,6 @@
-from clapDetector import ClapDetector
+import sys
+sys.path.append("..")
+from src.clapDetector import ClapDetector
 
 thresholdBias = 6000
 lowcut=200               #< increase this to make claps detection more strict 

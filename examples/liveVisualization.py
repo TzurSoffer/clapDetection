@@ -1,8 +1,13 @@
-import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib.animation import FuncAnimation
+except:
+    print("You do not have matplotlib installed, please install matplotlib using ``` pip install matplotlib ```, then restart this script.")
 import threading
 import numpy as np
-from clapDetector import ClapDetector
+import sys
+sys.path.append("..")
+from src.clapDetector import ClapDetector
 
 class Visualizer():
     def __init__(self, rate = 44100) -> None:
@@ -49,8 +54,6 @@ class Visualizer():
         plt.show()
 
 if __name__ == '__main__':
-    from clapDetector import ClapDetector
-
     thresholdBias = 6000
     lowcut=200               #< increase this to make claps detection more strict 
     highcut=3200             #< decrease this to make claps detection more strict
