@@ -1,4 +1,6 @@
 import sys
+import time
+
 sys.path.append("..")
 from src.clapDetector import ClapDetector
 
@@ -16,3 +18,5 @@ inputDeviceIndex=0
 or
 inputDeviceIndex="Microphone (Yeti Stereo Microph"
 """)
+while True:
+    time.sleep(1)

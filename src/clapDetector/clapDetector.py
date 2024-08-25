@@ -19,7 +19,7 @@ class ClapDetector():
     Attributes:
     -----------
     inputDeviceIndex : int or str
-        The ID or name of the audio input device.
+        The ID or name of the audio input device. Can be set to None if you want to feed the system you own data.
     initialVolumeThreshold : int
         The initial volume threshold for clap detection.
     rate : int
@@ -88,7 +88,7 @@ class ClapDetector():
         Saves the audio data to a file.
 
     run(self, thresholdBias=6000, lowcut=100, highcut=4000, audioData=-1) -> list:
-        Runs the clap detection process and returns the result.
+        Runs the clap detection process and returns the result. AudioData can be set to the raw audio data in case you dont want the system to use the microphone.
 
     stop(self) -> None:
         Gracefully stops the audio stream.
@@ -437,7 +437,15 @@ class ClapDetector():
         Returns:
         - list: The clap pattern.
         """
-
+        
+        if type(audioData) != int and self.rate == None:
+            self.rate = 44100
+            self.resetTimeSamples = int(self.resetTime * self.rate)
+            self.clapIntervalSamples = int(self.clapInterval * self.rate)
+            self.samplesPerTimePeriod = self.secondsPerTimePeriod * self.rate
+            self.audioBuffer = deque(maxlen=int((self.rate*self.audioBufferLength)/self.bufferLength))
+            self.currentSampleTime = 0 + int(self.debounceTimeFactor * self.rate)
+            self.logger.warning("You need to set the rate variable when providing raw audioData, using the default 44100 instead.")
         self.getAudio(audioData)
 
         self.currentSampleTime = self.convertToCircularTime(self.currentSampleTime + self.bufferLength) #< Convert the current sample time to a circular time scale
