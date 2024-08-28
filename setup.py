@@ -5,7 +5,7 @@ with open("README.md", "r", encoding = "utf-8") as fh:
 
 setuptools.setup(
     name = "clap-detector",
-    version = "2.0.4",
+    version = "2.0.5",
     author = "Tzur Soffer",
     author_email = "tzur.soffer@gmail.com",
     description = "A clap detector that can detect claps in patterns of single, double, etc.",
