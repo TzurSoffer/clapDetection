@@ -1,12 +1,38 @@
-import pyaudio
-import numpy as np
 import time
 import os
+import warnings
+import logging
 from datetime import datetime
+from collections import deque
+
+import pyaudio
+import numpy as np
 from scipy.signal import butter, lfilter, find_peaks
 from scipy.io.wavfile import write as writeAudioFile
-import logging
-from collections import deque
+
+def getDefaultMicrophone():
+    p = pyaudio.PyAudio()
+    defaultDeviceIndex = p.get_default_input_device_info()['index']
+    return(defaultDeviceIndex)
+
+def printDeviceInfo() -> None:
+    """
+    Print information about available audio devices.
+
+    This method retrieves information about audio devices and prints details for each device,
+    including its index and name.
+
+    Returns:
+    - None
+    """
+    p = pyaudio.PyAudio()
+    info = p.get_host_api_info_by_index(0)
+    numDevices = info.get('deviceCount')
+
+    print("Available audio devices:")
+    for i in range(0, numDevices):
+        deviceInfo = p.get_device_info_by_host_api_device_index(0, i)
+        print(f"Device {i}: {deviceInfo['name']}")
 
 class ClapDetector():
     """
@@ -18,7 +44,7 @@ class ClapDetector():
 
     Attributes:
     -----------
-    inputDeviceIndex : int or str
+    inputDevice : int or str
         The ID or name of the audio input device. Can be set to None if you want to feed the system you own data.
     initialVolumeThreshold : int
         The initial volume threshold for clap detection.
@@ -78,9 +104,6 @@ class ClapDetector():
     extractPattern(self) -> list:
         Extracts clap pattern based on the time intervals between recorded clap times.
 
-    printDeviceInfo(self) -> None:
-        Prints information about available audio devices.
-
     getAudio(self, audio=-1) -> np.ndarray:
         Continuously retrieves audio data from the input stream.
 
@@ -97,22 +120,35 @@ class ClapDetector():
         Resets the clap times.
 
     """
-    def __init__(self, inputDeviceIndex="USB Audio Device",            #< ID or name/name_section of audio Device
-                 initialVolumeThreshold=7000,
+    def __init__(self, inputDevice=-1,                                 #< ID or name/name_section of audio Device
+                 initialVolumeThreshold=7000,                          #< Initial value for the minimum audio loudness needed to be considered a clap.
                  rate=None,                                            #< Sample rate of microphone (leave None to get dynamically)
                  bufferLength=2048,                                    #< Length of audio clip section(buffer)
                  debounceTimeFactor=0.15,
-                 resetTime=0.25,                                       #< seconds to reset the clap pattern
+                 resetTime=0.35,                                       #< Time in seconds needed to reset the clap pattern back to 0.
                  clapInterval=0.08,
                  secondsPerTimePeriod=10,
                  volumeAverageFactor=0.9,                              #< Factor to control the influence of the new threshold on the average
                  logger=None,
-                 logLevel = logging.INFO,
-                 audioBufferLength=3.1                                 #< length of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
+                 logLevel=logging.INFO,
+                 audioBufferLength=3.1,                                #< length of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
+                 exceptionOnOverflow=True,                             #< Should pyaudio raise an error if a buffer overflow occurs?
+                 inputDeviceIndex=None                                 #< For backward compatibility and could be removed anytime.
                  ):
-        if type(inputDeviceIndex) == str:
-            inputDeviceIndex = self.findID(lookfor=inputDeviceIndex)
-        self.inputDeviceIndex = inputDeviceIndex
+        if inputDeviceIndex != None:
+            warnings.warn("Warning: The `inputDeviceIndex` variable is deprecated and can be removed in a future version. To resolve this warning, replace `inputDeviceIndex` with `inputDevice`",
+                          DeprecationWarning,
+                          stacklevel=2
+                          )
+            inputDevice = inputDeviceIndex
+
+        if type(inputDevice) == str:
+            inputDevice = self.findID(lookfor=inputDevice)
+
+        elif inputDevice == -1:
+            inputDevice = getDefaultMicrophone()
+
+        self.inputDevice = inputDevice
         self.volumeThreshold = initialVolumeThreshold
         self.rate = rate
         self.bufferLength = bufferLength
@@ -122,6 +158,7 @@ class ClapDetector():
         self.secondsPerTimePeriod = secondsPerTimePeriod
         self.audioBufferLength = audioBufferLength
         self.volumeAverageFactor = volumeAverageFactor
+        self.exceptionOnOverflow = exceptionOnOverflow
         self.audioData = np.array([], dtype=np.int16)
 
         # Clap detection variables
@@ -131,9 +168,22 @@ class ClapDetector():
         self.logger = logger
         if self.logger == None:
             self.initLogger(logLevel=logLevel)
-    
-    def _resetClapTimes(self):
-        self.clapTimes = [0]  #< Reset clapTimes
+
+    def printDeviceInfo(self) -> None:
+        """
+        Print information about available audio devices.
+
+        This method retrieves information about audio devices and prints details for each device,
+        including its index and name.
+
+        Returns:
+        - None
+        """
+        warnings.warn('Warning: The `printDeviceInfo` method has been moved outside of the `ClapDetector` class and will be removed in a future version. To resolve this warning, call `printDeviceInfo` directly from the module instead of from the `ClapDetector` class.',
+                        DeprecationWarning,
+                        stacklevel=2
+                        )
+        printDeviceInfo()
 
     def findID(self, lookfor="USB Audio Device"):
         p = pyaudio.PyAudio()
@@ -149,6 +199,9 @@ class ClapDetector():
 
         print(f"{lookfor} was not found in available devices.")
         return(-1)
+
+    def _resetClapTimes(self):
+        self.clapTimes = [0]  #< Reset clapTimes
 
     def initLogger(self, logLevel=logging.INFO) -> None:
         self.logger = logging.getLogger(__name__)
@@ -170,7 +223,7 @@ class ClapDetector():
 
     def initAudio(self):
         self.p = pyaudio.PyAudio()
-        input_device_info = self.p.get_device_info_by_index(self.inputDeviceIndex)
+        input_device_info = self.p.get_device_info_by_index(self.inputDevice)
         channels = input_device_info.get('maxInputChannels', 1)
         if self.rate == None:
             self.rate = int(input_device_info.get('defaultSampleRate', 44100))
@@ -181,26 +234,26 @@ class ClapDetector():
         self.audioBuffer = deque(maxlen=int((self.rate*self.audioBufferLength)/self.bufferLength))
         self.currentSampleTime = 0 + int(self.debounceTimeFactor * self.rate)
 
-        print(f"Microphone on index {self.inputDeviceIndex} has {channels} channels and operates at a rate of {self.rate}")
+        print(f"Microphone on index {self.inputDevice} has {channels} channels and operates at a rate of {self.rate}")
         try:
             self.stream = self.p.open(format=pyaudio.paInt16,
                                   channels=channels,
                                   rate=self.rate,
                                   input=True,
                                   frames_per_buffer=self.bufferLength,
-                                  input_device_index=self.inputDeviceIndex)
+                                  input_device_index=self.inputDevice)
         except:
             raise Exception("Failed to open audio stream perhaps the audio index/name is incorrect?")
-        self.logger.info("audio has been initialized")
+        self.logger.info("Audio has been initialized.")
         return(self)
         
     def restartAudio(self):
         try:
             self.stop()
         except:
-            self.logger.warning("audio stream failed to stop")
+            self.logger.warning("Audio stream failed to stop!")
         self.initAudio()
-        self.logger.debug("successfully restarted audio stream")
+        self.logger.debug("Successfully restarted audio stream.")
         return(self)
 
     def calculateTimeDifference(self, timeA, timeB) -> float:
@@ -322,7 +375,7 @@ class ClapDetector():
             self.clapTimes.append(currentSampleTime)
             self.logger.debug(f"Clap detected! {len(peaks)} peaks found")
 
-        return(clapDetected)
+        return clapDetected
 
     def detectClapPattern(self) -> list:
         """
@@ -338,10 +391,8 @@ class ClapDetector():
         lastClapTime = self.clapTimes[-1]
         if self.calculateTimeDifference(self.currentSampleTime, lastClapTime) >= self.resetTimeSamples:
             pattern = self.extractPattern()
-            # Uncomment the following line for debugging or logging the detected pattern
-            # print("Clap Pattern:", pattern)
 
-        return(pattern)
+        return pattern
 
     def extractPattern(self) -> list:
         """
@@ -366,25 +417,6 @@ class ClapDetector():
         if consecutiveClaps > 1:                     #< if there are more than one consecutive clap that was recorder but not appended to the pattern
             pattern.append(consecutiveClaps)
         return(pattern)
-
-    def printDeviceInfo(self) -> None:
-        """
-        Print information about available audio devices.
-
-        This method retrieves information about audio devices and prints details for each device,
-        including its index and name.
-
-        Returns:
-        - None
-        """
-        p = pyaudio.PyAudio()
-        info = p.get_host_api_info_by_index(0)
-        numDevices = info.get('deviceCount')
-
-        print("Available audio devices:")
-        for i in range(0, numDevices):
-            deviceInfo = p.get_device_info_by_host_api_device_index(0, i)
-            print(f"Device {i}: {deviceInfo['name']}")
     
     def getAudio(self, audio=-1) -> np.ndarray:
         """
@@ -399,20 +431,20 @@ class ClapDetector():
         """
         try:
             if type(audio) == int:
-                self.audioData = np.frombuffer(self.stream.read(self.bufferLength), dtype=np.int16) #< Convert the raw audio data to a NumPy array of 16-bit integers
+                self.audioData = np.frombuffer(self.stream.read(self.bufferLength, exception_on_overflow=self.exceptionOnOverflow), dtype=np.int16) #< Convert the raw audio data to a NumPy array of 16-bit integers
             else:                                                                                   #< using else to avoid overwrite of self.audioData with -1 if failed to capture audio
                 self.audioData = audio
             self.audioBuffer.append(self.audioData)
 
         except Exception as e:
-            time.sleep(.5)
             print(e)
             print("Recording error, resetting stream and trying again")
+            time.sleep(.5)
             self.restartAudio()
-        
+
         finally:
             return(self.audioData)
-    
+
     def saveAudio(self, folder="./claps", fileName=None, audio=-1):
         if type(audio) == int:
             audio = np.array(self.audioBuffer, dtype=np.int16).reshape(-1,)
@@ -466,18 +498,19 @@ class ClapDetector():
         self.logger.info("audio stream stopped")
 
 if __name__ == '__main__':
-
     pyaudio.PyAudio()
+
+    print("""
+          --------------------------------
+          The application initially attempts to use the system's default audio device. If this doesn't work or if you prefer to use a different device, you can change it. Below are the available audio devices. Find the one you are using and change the 'inputDevice' variable to the name or index of your preferred audio device. Then, restart the program, and it should properly capture audio.
+          --------------------------------
+          """)
+    printDeviceInfo()
+
     thresholdBias = 6000
     lowcut=200               #< increase this to make claps detection more strict
     highcut=3200             #< decrease this to make claps detection more strict
-    clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="Microphone (Yeti Stereo Microph")
-    clapDetector.printDeviceInfo()
-    print("""
-          -----------------------------
-          These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
-          -----------------------------
-          """)
+    clapDetector = ClapDetector(inputDevice=-1, logLevel=logging.DEBUG)
     clapDetector.initAudio()
 
     try:
@@ -489,9 +522,13 @@ if __name__ == '__main__':
             if resultLength == 2:
                 print(f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
                 clapDetector.saveAudio(folder="./")
+            time.sleep(1/60)
 
     except KeyboardInterrupt:
         print("Exited gracefully")
+
     except Exception as e:
         print(f"error: {e}")
+
+    finally:
         clapDetector.stop()

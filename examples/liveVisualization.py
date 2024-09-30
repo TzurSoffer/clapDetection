@@ -7,7 +7,7 @@ import threading
 import numpy as np
 import sys
 sys.path.append("..")
-from src.clapDetector import ClapDetector
+from src.clapDetector import ClapDetector, printDeviceInfo
 
 class Visualizer():
     def __init__(self, rate = 44100) -> None:
@@ -54,16 +54,18 @@ class Visualizer():
         plt.show()
 
 if __name__ == '__main__':
+
+    print("""
+        --------------------------------
+        The application initially attempts to use the system's default audio device. If this doesn't work or if you prefer to use a different device, you can change it. Below are the available audio devices. Find the one you are using and change the 'inputDevice' variable to the name or index of your preferred audio device. Then, restart the program, and it should properly capture audio.
+        --------------------------------
+        """)
+    printDeviceInfo()
+
     thresholdBias = 6000
     lowcut=200               #< increase this to make claps detection more strict 
     highcut=3200             #< decrease this to make claps detection more strict
-    clapDetector = ClapDetector(logLevel=10, inputDeviceIndex="Microphone (Yeti Stereo Microph")
-    clapDetector.printDeviceInfo()
-    print("""
-        -----------------------------
-        These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
-        -----------------------------
-        """)
+    clapDetector = ClapDetector(inputDevice=-1, logLevel=10)
     clapDetector.initAudio()
     
     visualizer = Visualizer(rate = clapDetector.rate)
@@ -84,4 +86,3 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"error: {e}")
         clapDetector.stop()
-
