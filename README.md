@@ -20,7 +20,7 @@ This project implements a clap detection system using an a mic or raw audio data
       If pyaudio still fails to install after trying option A, try to install it using ``` sudo apt install python3-pyaudio ```, then install clap-detector normally ``` pip install clap-detector```.
 
 ### Input
-   - If there are issues with audio input, check the device index in the `ClapDetector` constructor.
+   - If there are issues with audio input, check the inputDevice in the `ClapDetector` constructor.
 
 ### Accuracy
 - Adjust the bandpass filter parameters for better clap detection in different environments.
@@ -74,18 +74,20 @@ This project implements a clap detection system using an a mic or raw audio data
 ### option B:
 1. Create a script that uses this library 
    ```python
-   from clapDetector import ClapDetector
+   import time
+   from clapDetector import ClapDetector, printDeviceInfo
+
+   print("""
+         --------------------------------
+         The application initially attempts to use the system's default audio device. If this doesn't work or if you prefer to use a different device, you can change it. Below are the available audio devices. Find the one you are using and change the 'inputDevice' variable to the name or index of your preferred audio device. Then, restart the program, and it should properly capture audio.
+         --------------------------------
+         """)
+   printDeviceInfo()
 
    thresholdBias = 6000
-   lowcut=200               #< increase this to make claps detection more strict
+   lowcut=200               #< increase this to make claps detection more strict 
    highcut=3200             #< decrease this to make claps detection more strict
-   clapDetector = ClapDetector(logLevel=logging.DEBUG, inputDeviceIndex="USB Audio Device")
-   clapDetector.printDeviceInfo()
-   print("""
-         -----------------------------
-         These are the audio devices, find the one you are using and change the variable "inputDeviceIndex" to the the name or index of your audio device. Then restart the program and it should properly get audio data.
-         -----------------------------
-         """)
+   clapDetector = ClapDetector(inputDevice=-1, logLevel=10)
    clapDetector.initAudio()
 
    try:
@@ -97,11 +99,13 @@ This project implements a clap detection system using an a mic or raw audio data
          if resultLength == 2:
                print(f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
                clapDetector.saveAudio(folder="./")
+         time.sleep(1/60)
 
    except KeyboardInterrupt:
       print("Exited gracefully")
    except Exception as e:
       print(f"error: {e}")
+   finally:
       clapDetector.stop()
    ```
 
