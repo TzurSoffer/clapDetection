@@ -133,9 +133,9 @@ class ClapDetector():
                  logLevel=logging.INFO,
                  audioBufferLength=3.1,                                #< length of audio to save in buffer in seconds (for saving audio to file only. not used in calculations)
                  exceptionOnOverflow=True,                             #< Should pyaudio raise an error if a buffer overflow occurs?
-                 inputDeviceIndex=None                                 #< For backward compatibility and could be removed anytime.
+                 inputDeviceIndex=-1                                   #< For backward compatibility and could be removed anytime.
                  ):
-        if inputDeviceIndex != None:
+        if inputDeviceIndex != -1:
             warnings.warn("Warning: The `inputDeviceIndex` variable is deprecated and can be removed in a future version. To resolve this warning, replace `inputDeviceIndex` with `inputDevice`",
                           DeprecationWarning,
                           stacklevel=2
