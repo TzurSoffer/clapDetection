@@ -4,6 +4,8 @@
 
 This project implements a clap detection system using an a mic or raw audio data as input. It can detect clap patterns including single and double claps.
 
+### If you found [this repository](https://github.com/TzurSoffer/clapDetection) useful, please give it a ⭐!.
+
 ## Features
 
 - Clap pattern detection.
