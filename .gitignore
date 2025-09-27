@@ -6,3 +6,4 @@ src/clap_detector.egg-info/*
 src/clapDetector/clapDetection.log
 .pypirc
 uploadToPypi.bat
+token.secret
