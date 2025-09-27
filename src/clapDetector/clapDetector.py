@@ -209,12 +209,6 @@ class ClapDetector():
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
-        # Add a file handler
-        fileHandler = logging.FileHandler('clapDetection.log')
-        fileHandler.setLevel(logLevel)
-        fileHandler.setFormatter(formatter)
-        self.logger.addHandler(fileHandler)
-
         # Stream handler (to print log messages to the console)
         streamHandler = logging.StreamHandler()
         streamHandler.setLevel(logLevel)
