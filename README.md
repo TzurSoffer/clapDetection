@@ -65,6 +65,26 @@ This project implements a clap detection system using an a mic or raw audio data
 ## Configuration
 
 - Adjust parameters in the `ClapDetector` class constructor to fine-tune the clap detection system.
+  ### Choosing microphone (input device)
+   The application initially attempts to use the system's default audio device. If this doesn't work or if you prefer to use a different device, you can change it.
+   First, find your input devices using `clapDetector.printDeviceInfo()`, this will print something along the lines of:
+   ```
+   Available audio devices:
+   Device 0: Microsoft Sound Mapper - Input
+   Device 1: Microphone (Yeti Stereo Microph
+   Device 2: Microsoft Sound Mapper - Output
+   Device 3: YX Display (NVIDIA High Definit
+   Device 4: Speakers (Realtek(R) Audio)
+   Device 5: Speakers (Yeti Stereo Microphon
+   Device 6: ES-G34C5 (NVIDIA High Definitio
+   ```
+
+   once you found your desired input device, copy either it id or name, eg: `1` or `Microphone (Yeti Stereo Microph`, note that it's almost always better to use the name and not the id as it is more robust.
+
+   Once you have your input device, simply tell the constructor to use it like so: </br>
+   ```clapDetector.ClapDetector(inputDevice="Microphone (Yeti Stereo Microph")``` </br>
+   or </br>
+   ```clapDetector.ClapDetector(inputDevice=1)```
 
 ## Usage
 
@@ -72,6 +92,19 @@ This project implements a clap detection system using an a mic or raw audio data
 1. clone the repository, if you have not already using ```git clone https://github.com/TzurSoffer/clapDetection/```
 
 2. go into the examples folder and choose one of the scripts you would like to run.
+
+   The `examples/` folder contains small runnable scripts demonstrating common flows:
+   - `findMicrophone.py` — list audio devices and indexes
+   - `singleClap.py` — detects single claps
+   - `doubleClap.py` — detects double claps and saves audio when detected
+   - `liveVisualization.py` — live plot of audio levels (may require matplotlib)
+   - `externalAudioSource.py` — shows how to feed audio into the detector without using the module's built-in tools (Note that this is an advanced example showing the tools versatility, but I do not recommend doing this in most cases)
+
+   To run an example (PowerShell):
+
+   ```powershell
+   python .\examples\doubleClap.py
+   ```
 
 ### option B:
 1. Create a script that uses this library 
@@ -97,7 +130,7 @@ This project implements a clap detection system using an a mic or raw audio data
          audioData = clapDetector.getAudio()
 
          result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
-         resultLength = len(result)
+         resultLength = len(result)    #< amount of claps detected (1 is single-clap, 2 is double-clap, etc)
          if resultLength == 2:
                print(f"Double clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
                clapDetector.saveAudio(folder="./")
@@ -115,4 +148,4 @@ This project implements a clap detection system using an a mic or raw audio data
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License — see the `LICENSE.txt` file for details.

@@ -22,7 +22,7 @@ try:
         audioData = clapDetector.getAudio()
 
         result = clapDetector.run(thresholdBias=thresholdBias, lowcut=lowcut, highcut=highcut, audioData=audioData)
-        resultLength = len(result)
+        resultLength = len(result)    #< amount of claps detected (1 is single-clap, 2 is double-clap, etc)
         if resultLength == 1:
             print(f"Single clap detected! bias {thresholdBias}, lowcut {lowcut}, and highcut {highcut}")
             clapDetector.saveAudio(folder="./")
