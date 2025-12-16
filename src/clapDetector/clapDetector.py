@@ -410,7 +410,8 @@ class ClapDetector():
         
         if consecutiveClaps > 1:                     #< if there are more than one consecutive clap that was recorder but not appended to the pattern
             pattern.append(consecutiveClaps)
-        return(pattern)
+
+        return pattern
     
     def getAudio(self, audio=-1) -> np.ndarray:
         """
