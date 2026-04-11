@@ -1,3 +1,4 @@
+![PyPI - Downloads](https://img.shields.io/pypi/dw/clap-detector) ![Downloads](https://static.pepy.tech/badge/clap-detector)
 # Clap Detection System
 
 ## Overview
